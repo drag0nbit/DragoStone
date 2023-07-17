@@ -24,7 +24,8 @@ font_main_17 = pygame.font.SysFont('Comic Sans MS', 17)
 # - Элементаль (elemental)  : Имеют свойства своих элементов
 # - Дракон (dragon)         : Имеют хорошое количество здоровья и сложности, многие драконы имеют провокацию до 1 удара
 # - Орк (orc)               : Имеют хорошую атаку и сложность, многие орки могут атаковать сразу после выставления
-# Типы заклинаний:    | Лед, Огонь, Электричество, Ветер, Кровь, Свет, Тьма
+# Типы заклинаний:    | Лед, Огонь, Электричество, Ветер, Кровь, Свет,  Тьма
+#                     | ice, fire,  electricity,   wind,  blood, light, darkness
 # Спец. способности:  | 
 # Типы предметов:     | 
 
@@ -34,7 +35,7 @@ CARDS = {
         "name": "Ошибка",
         "description": "Как ты это получил????",
         "card_type": "entity", 
-        "type": "error",
+        "type": "any",
         "rarity": "none",
         "hp": 1,
         "attack": 0,
@@ -45,28 +46,29 @@ CARDS = {
         "original": True,
         "attacks": 0
     },
+    # spell
     1: {
         "id": 1,
         "name": "Волшебная стрела",
         "description": "Наносит 2 урона герою противника",
         "card_type": "spell", 
-        "type": "null",
+        "type": "light",
         "rarity": "basic",
         "mana": 2,
-        "special": ["damage_enemy_player"],
+        "special": ["damageEnemyPlayer"],
         "special_vals": [2],
         "original": True
     },
     2: {
         "id": 2,
         "name": "Молния",
-        "description": "Наносит 3 урона всем персонажам",
+        "description": "Наносит 3 урона ВСЕМ персонажам",
         "card_type": "spell", 
-        "type": "null",
+        "type": "electricity",
         "rarity": "rare",
         "mana": 5,
-        "special": ["damage_all"],
-        "special_vals": [3],
+        "special": ["damageAllEntity", "damagePlayer", "damageEnemyPlayer"],
+        "special_vals": [3, 3, 3],
         "original": True
     },
     3: {
@@ -74,8 +76,8 @@ CARDS = {
         "name": "ЭМИ вспышка",
         "description": "Изменяет урон всех механизмов до 1",
         "card_type": "spell", 
-        "type": "error",
-        "rarity": "none",
+        "type": "electricity",
+        "rarity": "rare",
         "mana": 7,
         "special": ["setTypeDamage"],
         "special_vals": [[1, "mech"]],
@@ -83,11 +85,60 @@ CARDS = {
     },
     4: {
         "id": 4,
+        "name": "Ярость",
+        "description": "Наносит 5 урона герою игрока и противника",
+        "card_type": "spell", 
+        "type": "blood",
+        "rarity": "rare",
+        "mana": 5,
+        "special": ["damagePlayer", "damageEnemyPlayer"],
+        "special_vals": [5, 5],
+        "original": True
+    },
+    5: {
+        "id": 5,
+        "name": "Солнечное затмение",
+        "description": "Выдает вам 3 солнечные вспышки",
+        "card_type": "spell", 
+        "type": "fire",
+        "rarity": "epic",
+        "mana": 5,
+        "special": ["addCards"],
+        "special_vals": [[3, 6]],
+        "original": True
+    },
+    6: {
+        "id": 6,
+        "name": "Солнечная вспышка",
+        "description": "Наносит 1 урона ВСЕМ",
+        "card_type": "spell", 
+        "type": "error",
+        "rarity": "basic",
+        "mana": 2,
+        "special": ["damageAllEntity", "damagePlayer", "damageEnemyPlayer"],
+        "special_vals": [1, 1, 1],
+        "original": True
+    },
+    7: {
+        "id": 7,
+        "name": "Солнечная буря",
+        "description": "Наносит 3 урона всей нежити",
+        "card_type": "spell", 
+        "type": "fire",
+        "rarity": "rare",
+        "mana": 7,
+        "special": ["damageAllEntityType"],
+        "special_vals": [[3, "undead"]],
+        "original": True
+    },
+    # mech
+    8: {
+        "id": 8,
         "name": "Бип-буп",
         "description": "Обычный боевой робот",
         "card_type": "entity", 
         "type": "mech",
-        "rarity": "none",
+        "rarity": "basic",
         "hp": 1,
         "attack": 2,
         "defence": 1,
@@ -160,6 +211,48 @@ def enemy_fatiuge(count = -1, add = True):
             ENEMY_SHIELD = 0
     if add: ENEMY_FATIUGE_DAMAGE += count
 
+def player_damage(count):
+    global PLAYER_HP, PLAYER_SHIELD
+    if PLAYER_SHIELD <= 0: PLAYER_HP -= count
+    else:
+        PLAYER_SHIELD -= count
+        if PLAYER_SHIELD <= 0:
+            PLAYER_HP -= abs(PLAYER_SHIELD)
+            PLAYER_SHIELD = 0
+
+def enemy_damage(count):
+    global ENEMY_HP, ENEMY_SHIELD
+    if ENEMY_SHIELD <= 0: ENEMY_HP -= count
+    else:
+        ENEMY_SHIELD -= count
+        if ENEMY_SHIELD <= 0:
+            ENEMY_HP -= abs(ENEMY_SHIELD)
+            ENEMY_SHIELD = 0
+
+def damage_all_entity_type(count, type_ = "any"):
+    for eid, e in enumerate(PLAYER_TABLE):
+        if type_ == e["type"] or type_ == "any" or e["type"] == "any":
+            if e["defence"] > 0:
+                e["defence"]-=count
+                if e["defence"] < 0:
+                    e["hp"] -= abs(e["defence"])
+                    e["defence"] = 0
+                    if e["hp"] <= 0: PLAYER_TABLE.pop(eid)
+            else: 
+                e["hp"]-=count
+                if e["hp"] <= 0: PLAYER_TABLE.pop(eid)
+    for eid, e in enumerate(ENEMY_TABLE):
+        if type_ == e["type"] or type_ == "any" or e["type"] == "any":
+            if e["defence"] > 0:
+                e["defence"]-=count
+                if e["defence"] < 0:
+                    e["hp"] -= abs(e["defence"])
+                    e["defence"] = 0
+                    if e["hp"] <= 0: ENEMY_TABLE.pop(eid)
+            else: 
+                e["hp"]-=count
+                if e["hp"] <= 0: ENEMY_TABLE.pop(eid)
+
 def player_draw_a_card(count = 1):
     for i in range(count):
         if len(PLAYER_BATTLE_DECK) > 0:
@@ -175,6 +268,12 @@ def enemy_draw_a_card(count = 1):
             if len(ENEMY_HAND) < 10: ENEMY_HAND.append(ENEMY_BATTLE_DECK[card])
             ENEMY_BATTLE_DECK.pop(card)
         else: enemy_fatiuge()
+
+def player_add_card_hand(id):
+    if len(PLAYER_HAND) < 10:
+        card = CARDS[id].copy()
+        card["original"] = False
+        PLAYER_HAND.append(card.copy())
 
 
 #00ffff ОТРИСОВКА --------------------------------------------
@@ -446,7 +545,6 @@ def sellect_card(x, y):
 
 for i in range(30):
     card = CARDS[random.randint(0, len(CARDS)-1)].copy()
-    if random.randint(0, 1): card["original"] = False
     PLAYER_MAIN_DECK.append(card)
 
 for i in range(30):
@@ -489,6 +587,24 @@ while running:
                                 PLAYER_TABLE.append(PLAYER_HAND[PLAYER_SELLECTED_CARD].copy())
                                 PLAYER_HAND.pop(PLAYER_SELLECTED_CARD)
                                 PLAYER_SELLECTED_CARD = -1
+                    elif PLAYER_HAND[PLAYER_SELLECTED_CARD]["card_type"] == "spell":
+                        if PLAYER_MANA >= PLAYER_HAND[PLAYER_SELLECTED_CARD]["mana"]:
+                            PLAYER_MANA-=PLAYER_HAND[PLAYER_SELLECTED_CARD]["mana"]
+                            for i, j in enumerate(PLAYER_HAND[PLAYER_SELLECTED_CARD]["special"]):
+                                val = PLAYER_HAND[PLAYER_SELLECTED_CARD]["special_vals"][i]
+                                if j == "damageAllEntity": damage_all_entity_type(val)
+                                elif j == "damageAllEntityType": damage_all_entity_type(val[0], val[1])
+                                elif j == "damagePlayer": player_damage(val)
+                                elif j == "damageEnemyPlayer": enemy_damage(val)
+                                elif j == "addCards":
+                                    for t in range(val[0]): player_add_card_hand(val[1])
+                                elif j == "null": pass
+                                elif j == "null": pass
+                                elif j == "null": pass
+                                elif j == "null": pass
+                                elif j == "null": pass
+                            PLAYER_HAND.pop(PLAYER_SELLECTED_CARD)
+                            PLAYER_SELLECTED_CARD = -1
 
             sellect_card(100, 100)
 
@@ -499,11 +615,6 @@ while running:
         enemyAngles[i]+=(i+1)/3
         if enemyAngles[i] >= 360: enemyAngles[i]-=360
 
-    # temp+=1
-    # if temp >= 30:
-    #     player_draw_a_card()
-    #     enemy_draw_a_card()
-    #     temp = 0
 
     screen.fill((0,0,0))
 
