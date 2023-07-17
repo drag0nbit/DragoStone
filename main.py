@@ -40,7 +40,7 @@ CARDS = {
         "rarity": "none",
         "hp": 1,
         "attack": 0,
-        "defence": 99,
+        "defence": 5,
         "mana": 10,
         "special": [],
         "special_vals": [],
@@ -174,6 +174,52 @@ saved = False
 playerAngles = [random.randint(0, 50),random.randint(0, 50),random.randint(0, 50)]
 enemyAngles = [random.randint(0, 50),random.randint(0, 50),random.randint(0, 50)]
 
+tutorial_text_stage = 0
+tutorial_text_i = 0
+tutorial_text_temp = 0
+tutorial_text = [
+    "Приветствую",
+    "Вы попали в DragoStone",
+    "Для начала вам нужно выбрать карты для колоды",
+    "Я вам буду давать по 3 карты, вы должны взять одну",
+    "И так 10 раз, прочитать описание карты вы можете внизу",
+    "-",
+    "Отлично, теперь я расскажу тебе о механиках",
+    "У карты есть стоимость в мане, она обозначается в левом верхнем углу карты синим цветом, если у тебя маны меньше чем стоимость - ты не сможешь её разыграть",
+    "Также если карта - существо, то у неё может быть урон - желтый, существа атакуют в ваш следующий ход, но есть и те, которые атакуют сразу",
+    "Существо имеет еще здоровье - красное и щит - белое, щит поглощает урон, нанесенный существу, тем самым понижая свою прочность, если здоровье существа нулевое - существо умирает",
+    "Также карты могут быть оригинальными и копиями, оригинальные карты в любом случае вернутся вам в колоду, а копии уничтожатся",
+    "Карты-копии даются другими существами, локациями или заклианиями",
+    "Оригинальные карты существ востанавливают все, кроме здоровья, тоесть если у вашего оригинального существа под конец матча будет 5 урона, 8 щита и 3 здоровья, то сбросится все кроме здоровья",
+    "Если оригинальное существо умрет - оно возродится после матча с 1 хп",
+    "Посмотреть описания карт можно перед матчем в инвентаре",
+    "Теперь, можно начать практику, я создам существ, а ты должен их убить, покачто они не будут тебя атаковать",
+    "-",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+]
+
+tutorial_card_sellect = []
+tutorial_cards_sellected = 0
+
+space_text_temp = 0
+space_text_i = 0
+space_col = [(255,255,255),(150,150,150)]
+
 PLAYER_MONEY = 100
 
 PLAYER_SELLECTED_CARD = -1
@@ -211,6 +257,7 @@ def player_fatiuge(count = -1, add = True):
             PLAYER_SHIELD = 0
     if add: PLAYER_FATIUGE_DAMAGE += count
 
+
 def enemy_fatiuge(count = -1, add = True):
     global ENEMY_HP, ENEMY_FATIUGE_DAMAGE, ENEMY_SHIELD
     if count < 0: count = ENEMY_FATIUGE_DAMAGE
@@ -222,6 +269,7 @@ def enemy_fatiuge(count = -1, add = True):
             ENEMY_SHIELD = 0
     if add: ENEMY_FATIUGE_DAMAGE += count
 
+
 def player_damage(count):
     global PLAYER_HP, PLAYER_SHIELD
     if PLAYER_SHIELD <= 0: PLAYER_HP -= count
@@ -231,6 +279,7 @@ def player_damage(count):
             PLAYER_HP -= abs(PLAYER_SHIELD)
             PLAYER_SHIELD = 0
 
+
 def enemy_damage(count):
     global ENEMY_HP, ENEMY_SHIELD
     if ENEMY_SHIELD <= 0: ENEMY_HP -= count
@@ -239,6 +288,7 @@ def enemy_damage(count):
         if ENEMY_SHIELD <= 0:
             ENEMY_HP -= abs(ENEMY_SHIELD)
             ENEMY_SHIELD = 0
+
 
 def damage_all_entity_type(count, type_ = "any"):
     for eid, e in enumerate(PLAYER_TABLE):
@@ -264,6 +314,7 @@ def damage_all_entity_type(count, type_ = "any"):
                 e["hp"]-=count
                 if e["hp"] <= 0: ENEMY_TABLE.pop(eid)
 
+
 def player_draw_a_card(count = 1):
     for i in range(count):
         if len(PLAYER_BATTLE_DECK) > 0:
@@ -271,6 +322,7 @@ def player_draw_a_card(count = 1):
             if len(PLAYER_HAND) < 10: PLAYER_HAND.append(PLAYER_BATTLE_DECK[card])
             PLAYER_BATTLE_DECK.pop(card)
         else: player_fatiuge()
+
 
 def enemy_draw_a_card(count = 1):
     for i in range(count):
@@ -280,15 +332,19 @@ def enemy_draw_a_card(count = 1):
             ENEMY_BATTLE_DECK.pop(card)
         else: enemy_fatiuge()
 
+
 def player_add_card_hand(id):
     if len(PLAYER_HAND) < 10:
         card = CARDS[id].copy()
         card["original"] = False
         PLAYER_HAND.append(card.copy())
 
+
 def save():
     global saved
     saved = True
+
+
 
 #00ffff ОТРИСОВКА --------------------------------------------
 
@@ -316,10 +372,12 @@ def render_text_in_rect(rect, font, text, color=(0, 0, 0)):
         screen.blit(line_surface, line_rect)
         y_offset += line_spacing
 
+
 def draw_stat(x, y, size, text, c1, c2, tox = 0, toy = 0):
     pygame.draw.rect(screen, c1, pygame.Rect(x, y, size, size))
     pygame.draw.rect(screen, c2, pygame.Rect(x, y, size, size), 2)
     screen.blit(text, pygame.Rect((x+tox, y+toy, size, size)))
+
 
 def player_draw_hand(x, y, highlight = -1, sellected = -1):
     for i, j in enumerate(PLAYER_HAND):
@@ -341,7 +399,6 @@ def player_draw_hand(x, y, highlight = -1, sellected = -1):
             pygame.draw.rect(screen, col, pygame.Rect(x+x2+46, y+y2+2, 12, 2))
             pygame.draw.rect(screen, col, pygame.Rect(x+x2+56, y+y2+2, 2, 12))
             render_text_in_rect(pygame.Rect(x+x2+5, y+y2+5, 50, 70), font_freetype_6, j["name"], (255,255,255))
-
     clr = (255,255,255)
     if sellected >= 0 and sellected <= 10 and sellected < len(PLAYER_HAND):
         mx, my = pygame.mouse.get_pos()
@@ -359,8 +416,6 @@ def player_draw_hand(x, y, highlight = -1, sellected = -1):
         pygame.draw.rect(screen, col, pygame.Rect(mx+34, my-70, 24, 4))
         pygame.draw.rect(screen, col, pygame.Rect(mx+56, my-70, 4, 24))
         render_text_in_rect(pygame.Rect(mx-55, my-65, 110, 130), font_freetype_15, PLAYER_HAND[sellected]["name"], (255,255,255))
-
-
     else:
         if highlight >= 0 and highlight <= 10 and highlight < len(PLAYER_HAND):
             if PLAYER_HAND[highlight]["original"]: clr = (255,255,123)
@@ -379,7 +434,6 @@ def player_draw_hand(x, y, highlight = -1, sellected = -1):
             pygame.draw.rect(screen, col, pygame.Rect(x+x2+94, y+y2, 24, 4))
             pygame.draw.rect(screen, col, pygame.Rect(x+x2+116, y+y2, 4, 24))
             render_text_in_rect(pygame.Rect(x+x2+5, y+y2+5, 110, 130), font_freetype_15, PLAYER_HAND[highlight]["name"], (255,255,255))
-
 
 
 def enemy_draw_hand(x, y, highlight = -1):
@@ -402,7 +456,6 @@ def enemy_draw_hand(x, y, highlight = -1):
             pygame.draw.rect(screen, col, pygame.Rect(x+x2+46, y+y2+2, 12, 2))
             pygame.draw.rect(screen, col, pygame.Rect(x+x2+56, y+y2+2, 2, 12))
             render_text_in_rect(pygame.Rect(x+x2+5, y+y2+5, 50, 70), font_freetype_6, j["name"], (255,255,255))
-
     clr = (255,255,255)
     if highlight >= 0 and highlight <= 10 and highlight < len(ENEMY_HAND):
         if ENEMY_HAND[highlight]["original"]: clr = (255,255,123)
@@ -421,6 +474,7 @@ def enemy_draw_hand(x, y, highlight = -1):
         pygame.draw.rect(screen, col, pygame.Rect(x+x2+94, y+y2, 24, 4))
         pygame.draw.rect(screen, col, pygame.Rect(x+x2+116, y+y2, 4, 24))
         render_text_in_rect(pygame.Rect(x+x2+5, y+y2+5, 110, 130), font_freetype_15, ENEMY_HAND[highlight]["name"], (255,255,255))
+
 
 def player_draw_table(x, y):
     pos = pygame.mouse.get_pos()
@@ -463,6 +517,7 @@ def player_draw_table(x, y):
         pygame.draw.rect(screen, col, pygame.Rect(x+x2+116, y+y2, 4, 24))
         render_text_in_rect(pygame.Rect(x+x2+5, y+y2+5, 110, 130), font_freetype_15, PLAYER_TABLE[highlight]["name"], (255,255,255))
 
+
 def enemy_draw_table(x, y):
     pos = pygame.mouse.get_pos()
     highlight = -1
@@ -504,6 +559,7 @@ def enemy_draw_table(x, y):
         pygame.draw.rect(screen, col, pygame.Rect(x+x2+116, y+y2, 4, 24))
         render_text_in_rect(pygame.Rect(x+x2+5, y+y2+5, 110, 130), font_freetype_15, ENEMY_TABLE[highlight]["name"], (255,255,255))
 
+
 def draw_mana():
     for i in range(1, 11):
         col = (50,50,255)
@@ -517,11 +573,13 @@ def draw_mana():
     screen.blit(font_main_17.render(f"x{PLAYER_MANA}", False, (50,50,255)), pygame.Rect((870, 510, 50, 20)))
     screen.blit(font_main_17.render(f"x{ENEMY_MANA}", False, (50,50,255)), pygame.Rect((870, 70, 50, 20)))
 
+
 def draw_rotated_rect(x, y, w, h, color, angle):
     rect_surface = pygame.Surface((w, h), pygame.SRCALPHA)
     pygame.draw.rect(rect_surface, color, (0, 0, w, h))
     rotated_surface = pygame.transform.rotate(rect_surface, int(angle))
     screen.blit(rotated_surface, (x - rotated_surface.get_width() // 2, y - rotated_surface.get_height() // 2))
+
 
 def draw_player(x, y):
     draw_rotated_rect(x, y, 40, 40, (150,150,150), playerAngles[2])
@@ -538,6 +596,43 @@ def draw_enemy(x, y):
     draw_stat(x+40, y-10, 25, font_main_17.render(str(ENEMY_HP), False, (0,0,0)), (255,0,0), (255,50,50), 2, 0)
     if ENEMY_SHIELD > 0: draw_stat(x+40, y+20, 25, font_main_17.render(str(ENEMY_SHIELD), False, (0,0,0)), (255,255,255), (200,200,200), 2, 0)
     if ENEMY_ATTACK > 0: draw_stat(x-65, y+20, 25, font_main_17.render(str(ENEMY_ATTACK), False, (0,0,0)), (255,255,200), (255,255,0), 2, 0)
+
+
+def draw_single_card(x, y, card, highlight = False):
+    if not highlight:
+        clr = (255,255,255)
+        if CARDS[card]["original"]: clr = (255,255,123)
+        pygame.draw.rect(screen, (0,0,0), pygame.Rect(x+5, y+5, 50, 70))
+        pygame.draw.rect(screen, clr, pygame.Rect(x+5, y+5, 50, 70), 2)
+        draw_stat(x, y, 10, font_main_8.render(str(CARDS[card]["mana"]), False, (0,0,255)), (128,255,255), (0,255,255), 1, -1)
+        if CARDS[card]["card_type"] == "entity":
+            draw_stat(x+50, y+70, 10, font_main_8.render(str(CARDS[card]["hp"]), False, (0,0,0)), (255,0,0), (255,0,0), 1, -1)
+            if CARDS[card]["defence"] > 0: draw_stat(x+50, y+55, 10, font_main_8.render(str(CARDS[card]["defence"]), False, (0,0,0)), (255,255,255), (200,200,200), 1, -1)
+            if CARDS[card]["attack"] > 0: draw_stat(x, y+70, 10, font_main_8.render(str(CARDS[card]["attack"]), False, (0,0,0)), (255,255,200), (255,255,0), 1, -1)
+        col = (10,10,10)
+        if CARDS[card]["card_type"] == "entity": col = (0,255,0)
+        elif CARDS[card]["card_type"] == "spell": col = (0,120,255)
+        pygame.draw.rect(screen, col, pygame.Rect(x+46, y+2, 12, 2))
+        pygame.draw.rect(screen, col, pygame.Rect(x+56, y+2, 2, 12))
+        render_text_in_rect(pygame.Rect(x+5, y+5, 50, 70), font_freetype_6, CARDS[card]["name"], (255,255,255))
+    else:
+        clr = (255,255,255)
+        if CARDS[card]["original"]: clr = (255,255,123)
+        x2 = -30
+        y2 = -30
+        pygame.draw.rect(screen, (0,0,0), pygame.Rect(x+x2+5, y+y2+5, 110, 130))
+        pygame.draw.rect(screen, clr, pygame.Rect(x+x2+5, y+y2+5, 110, 130), 2)
+        draw_stat(x+x2, y+y2, 20, font_main_17.render(str(CARDS[card]["mana"]), False, (0,0,255)), (128,255,255), (0,255,255), 2, -2)
+        if CARDS[card]["card_type"] == "entity":
+            draw_stat(x+x2+100, y+y2+120, 20, font_main_17.render(str(CARDS[card]["hp"]), False, (0,0,0)), (255,0,0), (255,0,0), 2, -2)
+            if CARDS[card]["defence"] > 0: draw_stat(x+x2+100, y+y2+90, 20, font_main_17.render(str(CARDS[card]["defence"]), False, (0,0,0)), (255,255,255), (200,200,200), 2, -2)
+            if CARDS[card]["attack"] > 0: draw_stat(x+x2, y+y2+120, 20, font_main_17.render(str(CARDS[card]["attack"]), False, (0,0,0)), (255,255,200), (255,255,0), 2, -2)
+        col = (10,10,10)
+        if CARDS[card]["card_type"] == "entity": col = (0,255,0)
+        elif CARDS[card]["card_type"] == "spell": col = (0,120,255)
+        pygame.draw.rect(screen, col, pygame.Rect(x+x2+94, y+y2, 24, 4))
+        pygame.draw.rect(screen, col, pygame.Rect(x+x2+116, y+y2, 4, 24))
+        render_text_in_rect(pygame.Rect(x+x2+5, y+y2+5, 110, 130), font_freetype_15, CARDS[card]["name"], (255,255,255))
 
 #00ffff ПРОВЕРКИ --------------------------------------------
 
@@ -557,36 +652,11 @@ def sellect_card(x, y):
 
 
 
-for i in range(30):
-    card = CARDS[random.randint(0, len(CARDS)-1)].copy()
-    PLAYER_MAIN_DECK.append(card)
-
-for i in range(30):
-    card = CARDS[random.randint(0, len(CARDS)-1)].copy()
-    if random.randint(0, 1): card["original"] = False
-    ENEMY_BATTLE_DECK.append(card)
-
-for i in range(10):
-    card = CARDS[random.randint(0, len(CARDS)-1)].copy()
-    if random.randint(0, 1): card["original"] = False
-    if card["card_type"] == "entity": ENEMY_TABLE.append(card)
-
-PLAYER_BATTLE_DECK = PLAYER_MAIN_DECK
-
-
-
-for i in range(7):
-    player_draw_a_card()
-    enemy_draw_a_card()
-    PLAYER_MANA_MAX+=1
-    ENEMY_MANA_MAX+=1
-
-PLAYER_MANA = 999
-
-temp = 0
+SP = False
 
 running = True
 while running:
+    #00ff00 МЕХАНИКА ------------------------------------------------------------------
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -604,6 +674,7 @@ while running:
                         else: gameSubMode = "exit"
                 elif gameSubMode == "sellect_campaign":
                     if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): gameSubMode = "main"
+                    if pygame.Rect((50, 75, 200, 20)).collidepoint(pos): gameMode, gameSubMode = "tutorial", "talk"
                 elif gameSubMode == "settings":
                     if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): gameSubMode = "main"
                 elif gameSubMode == "exit":
@@ -612,6 +683,17 @@ while running:
                         save()
                         running = False
                     if pygame.Rect((50, 100, 200, 20)).collidepoint(pos): running = False
+            elif gameMode == "tutorial":
+                if gameSubMode == "getCards":
+                    tt = -1
+                    for i, j in enumerate(tutorial_card_sellect):
+                        if pygame.Rect(300+(i*250)+5, 80, 50, 70).collidepoint(pos):
+                            tt = j
+                            break
+                    if tt != -1:
+                        PLAYER_MAIN_DECK.append(CARDS[tt].copy())
+                        tutorial_card_sellect = []
+                        tutorial_cards_sellected+=1
             elif gameMode == "battle":
                 if pygame.Rect(300, 180, 620, 240).collidepoint(pos):
                     if PLAYER_SELLECTED_CARD != -1:
@@ -658,6 +740,35 @@ while running:
         exit_text_i = 0
         exit_text_temp = 0
 
+    if gameMode == "tutorial":
+        tutorial_text_temp+=1
+        if tutorial_text_temp >= 2:
+            tutorial_text_i+=1
+            tutorial_text_temp = 0
+        if gameSubMode == "talk":
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_SPACE]:
+                if not SP:
+                    tutorial_text_i = 0
+                    tutorial_text_temp = 0
+                    tutorial_text_stage += 1
+                SP = True
+            else:
+                SP = False
+        if gameSubMode == "getCards":
+            if len(tutorial_card_sellect) < 3:
+                tutorial_card_sellect.append(random.randint(1, len(CARDS)-2))
+    else:
+        exit_text_i = 0
+        exit_text_temp = 0
+    
+    space_text_temp+=1
+    if space_text_temp > 30:
+        space_text_temp = 0
+        space_text_i = {0:1,1:0}[space_text_i]
+
+    #00ff00 ОТРИСОВКА ------------------------------------------------------------------
+
     screen.fill((0,0,0))
 
     if gameMode == "menu":
@@ -684,6 +795,15 @@ while running:
             col = (255,255,255)
             if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): col = (255,255,0)
             screen.blit(font_main_17.render(f"Назад", True, col), pygame.Rect((50, 50, 200, 20)))
+            col = (255,255,255)
+            if pygame.Rect((50, 75, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Обучение", True, col), pygame.Rect((50, 75, 200, 20)))
+            col = (255,255,255)
+            if pygame.Rect((50, 100, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Номальный режим", True, col), pygame.Rect((50, 100, 200, 20)))
+            col = (255,255,255)
+            if pygame.Rect((50, 125, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Мастер режим", True, col), pygame.Rect((50, 125, 200, 20)))
         if gameSubMode == "settings":
             col = (255,255,255)
             if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): col = (255,255,0)
@@ -699,6 +819,22 @@ while running:
             col = (255,255,255)
             if pygame.Rect((50, 100, 200, 20)).collidepoint(pos): col = (255,0,0)
             screen.blit(font_main_17.render(f"Выйти без сохранения", True, col), pygame.Rect((50, 100, 200, 20)))
+
+    elif gameMode == "tutorial":
+        if gameSubMode == "talk":
+            render_text_in_rect(pygame.Rect((0, 0, WIDTH, HEIGHT)), font_freetype_30, "".join([j for i, j in enumerate(list(tutorial_text[tutorial_text_stage])) if i <= tutorial_text_i-20]), (255,255,255))
+            if tutorial_text_i > len(tutorial_text[tutorial_text_stage])+100: render_text_in_rect(pygame.Rect((0, 500, WIDTH, 100)), font_freetype_15, "[SPACE]", space_col[space_text_i])
+            if tutorial_text_stage == 5: gameSubMode = "getCards"
+        if gameSubMode == "getCards":
+            pos = pygame.mouse.get_pos()
+            for i, j in enumerate(tutorial_card_sellect):
+                draw_single_card(300+(i*250), 75, j, pygame.Rect(300+(i*250)+5, 80, 50, 70).collidepoint(pos))
+            if tutorial_cards_sellected >= 10:
+                tutorial_text_stage=6
+                tutorial_text_i=0
+                tutorial_text_temp=0
+                tutorial_card_sellect=[]
+                gameSubMode = "talk"
 
     elif gameMode == "shop":
         if gameSubMode == "main": pass
