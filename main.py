@@ -11,6 +11,7 @@ VERSION = "0.2"
 clock = pygame.time.Clock()
 font_freetype_6 = pygame.freetype.SysFont('Comic Sans MS', 6)
 font_freetype_15 = pygame.freetype.SysFont('Comic Sans MS', 15)
+font_freetype_30 = pygame.freetype.SysFont('Comic Sans MS', 30)
 font_main_8 = pygame.font.SysFont('Comic Sans MS', 8)
 font_main_17 = pygame.font.SysFont('Comic Sans MS', 17)
 
@@ -160,7 +161,15 @@ ENEMY_HAND = []
 ENEMY_TABLE = []
 
 tableLimit = 7
-inBattle = False
+
+gameMode = "menu"
+gameSubMode = "main"
+
+exit_text_temp = 0
+exit_text_i = 0
+exit_text = "Вы еще не сохранили ваш прогресс!"
+
+saved = False
 
 playerAngles = [random.randint(0, 50),random.randint(0, 50),random.randint(0, 50)]
 enemyAngles = [random.randint(0, 50),random.randint(0, 50),random.randint(0, 50)]
@@ -186,6 +195,8 @@ ENEMY_MANA_MAX = 0
 
 PLAYER_FATIUGE_DAMAGE = 1
 ENEMY_FATIUGE_DAMAGE = 1
+
+haveGame = False
 
 #00ffff МЕХАНИКА -------------------------------------------------------------
 
@@ -275,6 +286,9 @@ def player_add_card_hand(id):
         card["original"] = False
         PLAYER_HAND.append(card.copy())
 
+def save():
+    global saved
+    saved = True
 
 #00ffff ОТРИСОВКА --------------------------------------------
 
@@ -578,35 +592,55 @@ while running:
             running = False
         if event.type == pygame.MOUSEBUTTONUP:
             pos = pygame.mouse.get_pos()
-            if pygame.Rect(300, 180, 620, 240).collidepoint(pos):
-                if PLAYER_SELLECTED_CARD != -1:
-                    if PLAYER_HAND[PLAYER_SELLECTED_CARD]["card_type"] == "entity":
-                        if PLAYER_MANA >= PLAYER_HAND[PLAYER_SELLECTED_CARD]["mana"]:
-                            if len(PLAYER_TABLE) < 7:
+            if gameMode == "menu":
+                if gameSubMode == "main":
+                    if pygame.Rect((50, 50, 200, 20)).collidepoint(pos):
+                        if haveGame: pass
+                    if pygame.Rect((50, 75, 200, 20)).collidepoint(pos): gameSubMode = "sellect_campaign"
+                    if pygame.Rect((50, 100, 200, 20)).collidepoint(pos): gameSubMode = "settings"
+                    if pygame.Rect((50, 125, 200, 20)).collidepoint(pos): save()
+                    if pygame.Rect((50, 150, 200, 20)).collidepoint(pos): 
+                        if saved: running = False
+                        else: gameSubMode = "exit"
+                elif gameSubMode == "sellect_campaign":
+                    if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): gameSubMode = "main"
+                elif gameSubMode == "settings":
+                    if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): gameSubMode = "main"
+                elif gameSubMode == "exit":
+                    if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): gameSubMode = "main"
+                    if pygame.Rect((50, 75, 200, 20)).collidepoint(pos):
+                        save()
+                        running = False
+                    if pygame.Rect((50, 100, 200, 20)).collidepoint(pos): running = False
+            elif gameMode == "battle":
+                if pygame.Rect(300, 180, 620, 240).collidepoint(pos):
+                    if PLAYER_SELLECTED_CARD != -1:
+                        if PLAYER_HAND[PLAYER_SELLECTED_CARD]["card_type"] == "entity":
+                            if PLAYER_MANA >= PLAYER_HAND[PLAYER_SELLECTED_CARD]["mana"]:
+                                if len(PLAYER_TABLE) < 7:
+                                    PLAYER_MANA-=PLAYER_HAND[PLAYER_SELLECTED_CARD]["mana"]
+                                    PLAYER_TABLE.append(PLAYER_HAND[PLAYER_SELLECTED_CARD].copy())
+                                    PLAYER_HAND.pop(PLAYER_SELLECTED_CARD)
+                                    PLAYER_SELLECTED_CARD = -1
+                        elif PLAYER_HAND[PLAYER_SELLECTED_CARD]["card_type"] == "spell":
+                            if PLAYER_MANA >= PLAYER_HAND[PLAYER_SELLECTED_CARD]["mana"]:
                                 PLAYER_MANA-=PLAYER_HAND[PLAYER_SELLECTED_CARD]["mana"]
-                                PLAYER_TABLE.append(PLAYER_HAND[PLAYER_SELLECTED_CARD].copy())
+                                for i, j in enumerate(PLAYER_HAND[PLAYER_SELLECTED_CARD]["special"]):
+                                    val = PLAYER_HAND[PLAYER_SELLECTED_CARD]["special_vals"][i]
+                                    if j == "damageAllEntity": damage_all_entity_type(val)
+                                    elif j == "damageAllEntityType": damage_all_entity_type(val[0], val[1])
+                                    elif j == "damagePlayer": player_damage(val)
+                                    elif j == "damageEnemyPlayer": enemy_damage(val)
+                                    elif j == "addCards":
+                                        for t in range(val[0]): player_add_card_hand(val[1])
+                                    elif j == "null": pass
+                                    elif j == "null": pass
+                                    elif j == "null": pass
+                                    elif j == "null": pass
+                                    elif j == "null": pass
                                 PLAYER_HAND.pop(PLAYER_SELLECTED_CARD)
                                 PLAYER_SELLECTED_CARD = -1
-                    elif PLAYER_HAND[PLAYER_SELLECTED_CARD]["card_type"] == "spell":
-                        if PLAYER_MANA >= PLAYER_HAND[PLAYER_SELLECTED_CARD]["mana"]:
-                            PLAYER_MANA-=PLAYER_HAND[PLAYER_SELLECTED_CARD]["mana"]
-                            for i, j in enumerate(PLAYER_HAND[PLAYER_SELLECTED_CARD]["special"]):
-                                val = PLAYER_HAND[PLAYER_SELLECTED_CARD]["special_vals"][i]
-                                if j == "damageAllEntity": damage_all_entity_type(val)
-                                elif j == "damageAllEntityType": damage_all_entity_type(val[0], val[1])
-                                elif j == "damagePlayer": player_damage(val)
-                                elif j == "damageEnemyPlayer": enemy_damage(val)
-                                elif j == "addCards":
-                                    for t in range(val[0]): player_add_card_hand(val[1])
-                                elif j == "null": pass
-                                elif j == "null": pass
-                                elif j == "null": pass
-                                elif j == "null": pass
-                                elif j == "null": pass
-                            PLAYER_HAND.pop(PLAYER_SELLECTED_CARD)
-                            PLAYER_SELLECTED_CARD = -1
-
-            sellect_card(100, 100)
+                sellect_card(100, 100)
 
     for i in range(len(playerAngles)):
         playerAngles[i]+=(i+1)/3
@@ -615,26 +649,83 @@ while running:
         enemyAngles[i]+=(i+1)/3
         if enemyAngles[i] >= 360: enemyAngles[i]-=360
 
+    if gameMode == "menu" and gameSubMode == "exit":
+        exit_text_temp+=1
+        if exit_text_temp >= 2:
+            exit_text_i+=1
+            exit_text_temp = 0
+    else:
+        exit_text_i = 0
+        exit_text_temp = 0
 
     screen.fill((0,0,0))
 
-    pygame.draw.rect(screen, (50,50,50), pygame.Rect(300, 50, 620, 500))
-    pygame.draw.rect(screen, (100,100,100), pygame.Rect(300, 180, 620, 100))
-    pygame.draw.rect(screen, (100,100,100), pygame.Rect(300, 320, 620, 100))
-    pygame.draw.rect(screen, (50,50,50), pygame.Rect(70, 50, 180, 500))
-    pygame.draw.rect(screen, (50,50,50), pygame.Rect(970, 50, 180, 500))
+    if gameMode == "menu":
+        pos = pygame.mouse.get_pos()
+        if gameSubMode == "main": 
+            col = (50,50,50)
+            if haveGame:
+                col = (255,255,255)
+                if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Продолжить", True, col), pygame.Rect((50, 50, 200, 20)))
+            col = (255,255,255)
+            if pygame.Rect((50, 75, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Новая игра", True, col), pygame.Rect((50, 75, 200, 20)))
+            col = (255,255,255)
+            if pygame.Rect((50, 100, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Настройки", True, col), pygame.Rect((50, 100, 200, 20)))
+            col = (255,255,255)
+            if pygame.Rect((50, 125, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Сохранить прогресс", True, col), pygame.Rect((50, 125, 200, 20)))
+            col = (255,255,255)
+            if pygame.Rect((50, 150, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Выйти", True, col), pygame.Rect((50, 150, 200, 20)))
+        if gameSubMode == "sellect_campaign":
+            col = (255,255,255)
+            if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Назад", True, col), pygame.Rect((50, 50, 200, 20)))
+        if gameSubMode == "settings":
+            col = (255,255,255)
+            if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Назад", True, col), pygame.Rect((50, 50, 200, 20)))
+        if gameSubMode == "exit":
+            render_text_in_rect(pygame.Rect((0, 0, WIDTH, HEIGHT)), font_freetype_30, "".join([j for i, j in enumerate(list(exit_text)) if i <= exit_text_i]), (255,0,0))
+            col = (255,255,255)
+            if pygame.Rect((50, 50, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Назад", True, col), pygame.Rect((50, 50, 200, 20)))
+            col = (255,255,255)
+            if pygame.Rect((50, 75, 200, 20)).collidepoint(pos): col = (255,255,0)
+            screen.blit(font_main_17.render(f"Сохранить и выйти", True, col), pygame.Rect((50, 75, 200, 20)))
+            col = (255,255,255)
+            if pygame.Rect((50, 100, 200, 20)).collidepoint(pos): col = (255,0,0)
+            screen.blit(font_main_17.render(f"Выйти без сохранения", True, col), pygame.Rect((50, 100, 200, 20)))
 
-    draw_mana()
+    elif gameMode == "shop":
+        if gameSubMode == "main": pass
 
-    player_draw_table(600, 330)
-    enemy_draw_table(600, 190)
+    elif gameMode == "campaign": 
+        if gameSubMode == "main": pass
 
-    draw_player(600, 470)
-    draw_enemy(600, 120)
+    elif gameMode == "battle":
+        if gameSubMode == "main":
+            pygame.draw.rect(screen, (50,50,50), pygame.Rect(300, 50, 620, 500))
+            pygame.draw.rect(screen, (100,100,100), pygame.Rect(300, 180, 620, 100))
+            pygame.draw.rect(screen, (100,100,100), pygame.Rect(300, 320, 620, 100))
+            pygame.draw.rect(screen, (50,50,50), pygame.Rect(70, 50, 180, 500))
+            pygame.draw.rect(screen, (50,50,50), pygame.Rect(970, 50, 180, 500))
 
-    player_draw_hand(100, 100, check_highlight(100, 100), PLAYER_SELLECTED_CARD)
-    if PLAYER_SELLECTED_CARD < 0: enemy_draw_hand(1000, 100, check_highlight(1000, 100))
-    else: enemy_draw_hand(1000, 100, -1)
+            draw_mana()
+
+            player_draw_table(600, 330)
+            enemy_draw_table(600, 190)
+
+            draw_player(600, 470)
+            draw_enemy(600, 120)
+
+            player_draw_hand(100, 100, check_highlight(100, 100), PLAYER_SELLECTED_CARD)
+            if PLAYER_SELLECTED_CARD < 0: enemy_draw_hand(1000, 100, check_highlight(1000, 100))
+            else: enemy_draw_hand(1000, 100, -1)
+
     pygame.display.flip()
 
     clock.tick(FPS)
